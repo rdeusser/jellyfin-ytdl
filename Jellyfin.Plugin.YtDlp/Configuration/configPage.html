@@ -2,36 +2,104 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Template</title>
+    <title>yt-dlp</title>
+    <style>
+        .ytdlp-status { padding: 1em; margin-bottom: 1em; border-radius: 4px; }
+        .ytdlp-status.ok { background: #1b5e20; }
+        .ytdlp-status.error { background: #b71c1c; }
+        .ytdlp-section { margin-bottom: 2em; }
+        .ytdlp-section h3 { margin-bottom: 1em; border-bottom: 1px solid #444; padding-bottom: 0.5em; }
+        .source-item { padding: 0.5em; margin: 0.5em 0; background: #333; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .source-item .name { font-weight: bold; }
+        .source-item .url { font-size: 0.9em; color: #888; }
+    </style>
 </head>
 <body>
-    <div id="TemplateConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+    <div id="YtDlpConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
         <div data-role="content">
             <div class="content-primary">
-                <form id="TemplateConfigForm">
-                    <div class="selectContainer">
-                        <label class="selectLabel" for="Options">Several Options</label>
-                        <select is="emby-select" id="Options" name="Options" class="emby-select-withcolor emby-select">
-                            <option id="optOneOption" value="OneOption">One Option</option>
-                            <option id="optAnotherOption" value="AnotherOption">Another Option</option>
-                        </select>
+                <h2>yt-dlp Settings</h2>
+
+                <!-- Status Section -->
+                <div id="statusSection" class="ytdlp-status">
+                    <span id="statusText">Checking status...</span>
+                </div>
+
+                <form id="YtDlpConfigForm">
+                    <!-- General Settings -->
+                    <div class="ytdlp-section">
+                        <h3>General Settings</h3>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="DownloadPath">Download Path</label>
+                            <input id="DownloadPath" name="DownloadPath" type="text" is="emby-input" required />
+                            <div class="fieldDescription">Base directory where videos will be downloaded and organized.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="ScheduleEnabled" name="ScheduleEnabled" type="checkbox" is="emby-checkbox" />
+                                <span>Enable Scheduled Sync</span>
+                            </label>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="ScheduleIntervalHours">Sync Interval (hours)</label>
+                            <input id="ScheduleIntervalHours" name="ScheduleIntervalHours" type="number" is="emby-input" min="1" max="168" />
+                        </div>
                     </div>
-                    <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="AnInteger">An Integer</label>
-                        <input id="AnInteger" name="AnInteger" type="number" is="emby-input" min="0" />
-                        <div class="fieldDescription">A Description</div>
+
+                    <!-- Download Settings -->
+                    <div class="ytdlp-section">
+                        <h3>Download Settings</h3>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="FormatString">Format String</label>
+                            <input id="FormatString" name="FormatString" type="text" is="emby-input" />
+                            <div class="fieldDescription">yt-dlp format selection string. Default: bestvideo*+bestaudio/best</div>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="SubtitleLanguages">Subtitle Languages</label>
+                            <input id="SubtitleLanguages" name="SubtitleLanguages" type="text" is="emby-input" />
+                            <div class="fieldDescription">Comma-separated language codes (e.g., en,es,ja)</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="IncludeAutoGenSubs" name="IncludeAutoGenSubs" type="checkbox" is="emby-checkbox" />
+                                <span>Include Auto-Generated Subtitles</span>
+                            </label>
+                        </div>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="SubtitleFormat">Subtitle Format</label>
+                            <select is="emby-select" id="SubtitleFormat" name="SubtitleFormat">
+                                <option value="srt">SRT</option>
+                                <option value="vtt">VTT</option>
+                                <option value="ass">ASS</option>
+                            </select>
+                        </div>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="ThumbnailFormat">Thumbnail Format</label>
+                            <select is="emby-select" id="ThumbnailFormat" name="ThumbnailFormat">
+                                <option value="jpg">JPG</option>
+                                <option value="png">PNG</option>
+                                <option value="webp">WebP</option>
+                            </select>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="DownloadChannelArt" name="DownloadChannelArt" type="checkbox" is="emby-checkbox" />
+                                <span>Download Channel Artwork</span>
+                            </label>
+                        </div>
                     </div>
-                    <div class="checkboxContainer checkboxContainer-withDescription">
-                        <label class="emby-checkbox-label">
-                            <input id="TrueFalseSetting" name="TrueFalseCheckBox" type="checkbox" is="emby-checkbox" />
-                            <span>A Checkbox</span>
-                        </label>
+
+                    <!-- Actions -->
+                    <div class="ytdlp-section">
+                        <h3>Actions</h3>
+                        <button is="emby-button" type="button" id="btnSync" class="raised button-submit block emby-button">
+                            <span>Sync Now</span>
+                        </button>
+                        <button is="emby-button" type="button" id="btnUpdateYtDlp" class="raised block emby-button" style="margin-top: 0.5em;">
+                            <span>Update yt-dlp</span>
+                        </button>
                     </div>
-                    <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="AString">A String</label>
-                        <input id="AString" name="AString" type="text" is="emby-input" />
-                        <div class="fieldDescription">Another Description</div>
-                    </div>
+
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -41,37 +109,105 @@
             </div>
         </div>
         <script type="text/javascript">
-            var TemplateConfig = {
-                pluginUniqueId: 'eb5d7894-8eef-4b36-aa6f-5d124e828ce1'
+            var YtDlpConfig = {
+                pluginUniqueId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
             };
 
-            document.querySelector('#TemplateConfigPage')
+            function updateStatus() {
+                ApiClient.fetch({
+                    url: ApiClient.getUrl('Plugins/YtDlp/Status'),
+                    type: 'GET'
+                }).then(function(status) {
+                    var statusEl = document.querySelector('#statusSection');
+                    var textEl = document.querySelector('#statusText');
+
+                    if (status.YtDlpAvailable) {
+                        statusEl.className = 'ytdlp-status ok';
+                        textEl.textContent = 'yt-dlp v' + status.YtDlpVersion + ' - ' +
+                            (status.IsSyncing ? 'Syncing...' : 'Ready') +
+                            (status.LastSyncTime ? ' (Last sync: ' + new Date(status.LastSyncTime).toLocaleString() + ')' : '');
+                    } else {
+                        statusEl.className = 'ytdlp-status error';
+                        textEl.textContent = 'yt-dlp not available. Click "Update yt-dlp" to download.';
+                    }
+                }).catch(function() {
+                    var statusEl = document.querySelector('#statusSection');
+                    statusEl.className = 'ytdlp-status error';
+                    document.querySelector('#statusText').textContent = 'Could not fetch status';
+                });
+            }
+
+            document.querySelector('#YtDlpConfigPage')
                 .addEventListener('pageshow', function() {
                     Dashboard.showLoadingMsg();
-                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                        document.querySelector('#Options').value = config.Options;
-                        document.querySelector('#AnInteger').value = config.AnInteger;
-                        document.querySelector('#TrueFalseSetting').checked = config.TrueFalseSetting;
-                        document.querySelector('#AString').value = config.AString;
+                    updateStatus();
+
+                    ApiClient.getPluginConfiguration(YtDlpConfig.pluginUniqueId).then(function(config) {
+                        document.querySelector('#DownloadPath').value = config.DownloadPath || '';
+                        document.querySelector('#ScheduleEnabled').checked = config.ScheduleEnabled;
+                        document.querySelector('#ScheduleIntervalHours').value = config.ScheduleIntervalHours || 24;
+                        document.querySelector('#FormatString').value = config.FormatString || 'bestvideo*+bestaudio/best';
+                        document.querySelector('#SubtitleLanguages').value = (config.SubtitleLanguages || []).join(',');
+                        document.querySelector('#IncludeAutoGenSubs').checked = config.IncludeAutoGenSubs;
+                        document.querySelector('#SubtitleFormat').value = config.SubtitleFormat || 'srt';
+                        document.querySelector('#ThumbnailFormat').value = config.ThumbnailFormat || 'jpg';
+                        document.querySelector('#DownloadChannelArt').checked = config.DownloadChannelArt;
                         Dashboard.hideLoadingMsg();
                     });
                 });
 
-            document.querySelector('#TemplateConfigForm')
+            document.querySelector('#YtDlpConfigForm')
                 .addEventListener('submit', function(e) {
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                    config.Options = document.querySelector('#Options').value;
-                    config.AnInteger = document.querySelector('#AnInteger').value;
-                    config.TrueFalseSetting = document.querySelector('#TrueFalseSetting').checked;
-                    config.AString = document.querySelector('#AString').value;
-                    ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
-                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+
+                    ApiClient.getPluginConfiguration(YtDlpConfig.pluginUniqueId).then(function(config) {
+                        config.DownloadPath = document.querySelector('#DownloadPath').value;
+                        config.ScheduleEnabled = document.querySelector('#ScheduleEnabled').checked;
+                        config.ScheduleIntervalHours = parseInt(document.querySelector('#ScheduleIntervalHours').value, 10);
+                        config.FormatString = document.querySelector('#FormatString').value;
+                        config.SubtitleLanguages = document.querySelector('#SubtitleLanguages').value.split(',').map(s => s.trim()).filter(s => s);
+                        config.IncludeAutoGenSubs = document.querySelector('#IncludeAutoGenSubs').checked;
+                        config.SubtitleFormat = document.querySelector('#SubtitleFormat').value;
+                        config.ThumbnailFormat = document.querySelector('#ThumbnailFormat').value;
+                        config.DownloadChannelArt = document.querySelector('#DownloadChannelArt').checked;
+
+                        ApiClient.updatePluginConfiguration(YtDlpConfig.pluginUniqueId, config).then(function(result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
                     });
+
+                    return false;
                 });
 
-                e.preventDefault();
-                return false;
+            document.querySelector('#btnSync').addEventListener('click', function() {
+                Dashboard.showLoadingMsg();
+                ApiClient.fetch({
+                    url: ApiClient.getUrl('Plugins/YtDlp/Sync'),
+                    type: 'POST'
+                }).then(function() {
+                    Dashboard.hideLoadingMsg();
+                    Dashboard.alert('Sync started');
+                    setTimeout(updateStatus, 1000);
+                }).catch(function(err) {
+                    Dashboard.hideLoadingMsg();
+                    Dashboard.alert('Sync failed: ' + (err.message || 'Unknown error'));
+                });
+            });
+
+            document.querySelector('#btnUpdateYtDlp').addEventListener('click', function() {
+                Dashboard.showLoadingMsg();
+                ApiClient.fetch({
+                    url: ApiClient.getUrl('Plugins/YtDlp/UpdateYtDlp'),
+                    type: 'POST'
+                }).then(function(result) {
+                    Dashboard.hideLoadingMsg();
+                    Dashboard.alert('yt-dlp updated to v' + result.version);
+                    updateStatus();
+                }).catch(function(err) {
+                    Dashboard.hideLoadingMsg();
+                    Dashboard.alert('Update failed: ' + (err.message || 'Unknown error'));
+                });
             });
         </script>
     </div>
