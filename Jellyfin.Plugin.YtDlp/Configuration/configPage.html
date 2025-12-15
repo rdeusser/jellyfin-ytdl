@@ -9,9 +9,35 @@
         .ytdlp-status.error { background: #b71c1c; }
         .ytdlp-section { margin-bottom: 2em; }
         .ytdlp-section h3 { margin-bottom: 1em; border-bottom: 1px solid #444; padding-bottom: 0.5em; }
-        .source-item { padding: 0.5em; margin: 0.5em 0; background: #333; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
-        .source-item .name { font-weight: bold; }
-        .source-item .url { font-size: 0.9em; color: #888; }
+        .ytdlp-tabs { display: flex; border-bottom: 2px solid #444; margin-bottom: 1em; }
+        .ytdlp-tab { padding: 0.75em 1.5em; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .ytdlp-tab:hover { background: rgba(255,255,255,0.1); }
+        .ytdlp-tab.active { border-bottom-color: #00a4dc; color: #00a4dc; }
+        .ytdlp-tab-content { display: none; }
+        .ytdlp-tab-content.active { display: block; }
+        .item-list { margin: 1em 0; }
+        .item-card { padding: 1em; margin: 0.5em 0; background: #2a2a2a; border-radius: 4px; border-left: 3px solid #00a4dc; }
+        .item-card.disabled { opacity: 0.6; border-left-color: #666; }
+        .item-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em; }
+        .item-card-title { font-weight: bold; font-size: 1.1em; }
+        .item-card-subtitle { font-size: 0.9em; color: #888; margin-top: 0.25em; }
+        .item-card-actions { display: flex; gap: 0.5em; }
+        .item-card-actions button { padding: 0.25em 0.75em; font-size: 0.85em; }
+        .add-form { background: #333; padding: 1em; border-radius: 4px; margin-bottom: 1em; }
+        .add-form h4 { margin-top: 0; margin-bottom: 1em; }
+        .form-row { display: flex; gap: 1em; margin-bottom: 0.5em; }
+        .form-row > * { flex: 1; }
+        .condition-list { margin: 0.5em 0 0.5em 1em; padding-left: 1em; border-left: 2px solid #444; }
+        .condition-item { display: flex; gap: 0.5em; align-items: center; margin: 0.5em 0; padding: 0.5em; background: #222; border-radius: 4px; }
+        .condition-item select, .condition-item input { flex: 1; }
+        .child-rules { margin-left: 2em; padding-left: 1em; border-left: 2px dashed #00a4dc; }
+        .btn-small { padding: 0.25em 0.5em; font-size: 0.8em; }
+        .btn-danger { background: #b71c1c !important; }
+        .btn-secondary { background: #555 !important; }
+        .import-export-row { display: flex; gap: 1em; margin-bottom: 1em; }
+        .hidden { display: none !important; }
+        .inline-form { display: flex; gap: 0.5em; align-items: flex-end; }
+        .inline-form .inputContainer { margin-bottom: 0; }
     </style>
 </head>
 <body>
@@ -25,93 +51,276 @@
                     <span id="statusText">Checking status...</span>
                 </div>
 
+                <!-- Tabs -->
+                <div class="ytdlp-tabs">
+                    <div class="ytdlp-tab active" data-tab="general">General</div>
+                    <div class="ytdlp-tab" data-tab="sources">Sources</div>
+                    <div class="ytdlp-tab" data-tab="rules">Rules</div>
+                    <div class="ytdlp-tab" data-tab="overrides">Channel Overrides</div>
+                    <div class="ytdlp-tab" data-tab="importexport">Import/Export</div>
+                </div>
+
                 <form id="YtDlpConfigForm">
-                    <!-- General Settings -->
-                    <div class="ytdlp-section">
-                        <h3>General Settings</h3>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="DownloadPath">Download Path</label>
-                            <input id="DownloadPath" name="DownloadPath" type="text" is="emby-input" required />
-                            <div class="fieldDescription">Base directory where videos will be downloaded and organized.</div>
+                    <!-- General Tab -->
+                    <div id="tab-general" class="ytdlp-tab-content active">
+                        <div class="ytdlp-section">
+                            <h3>General Settings</h3>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="DownloadPath">Download Path</label>
+                                <input id="DownloadPath" name="DownloadPath" type="text" is="emby-input" required />
+                                <div class="fieldDescription">Base directory where videos will be downloaded and organized.</div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input id="ScheduleEnabled" name="ScheduleEnabled" type="checkbox" is="emby-checkbox" />
+                                    <span>Enable Scheduled Sync</span>
+                                </label>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="ScheduleIntervalHours">Sync Interval (hours)</label>
+                                <input id="ScheduleIntervalHours" name="ScheduleIntervalHours" type="number" is="emby-input" min="1" max="168" />
+                            </div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input id="ScheduleEnabled" name="ScheduleEnabled" type="checkbox" is="emby-checkbox" />
-                                <span>Enable Scheduled Sync</span>
-                            </label>
+
+                        <div class="ytdlp-section">
+                            <h3>Download Settings</h3>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="FormatString">Format String</label>
+                                <input id="FormatString" name="FormatString" type="text" is="emby-input" />
+                                <div class="fieldDescription">yt-dlp format selection string. Default: bestvideo*+bestaudio/best</div>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="SubtitleLanguages">Subtitle Languages</label>
+                                <input id="SubtitleLanguages" name="SubtitleLanguages" type="text" is="emby-input" />
+                                <div class="fieldDescription">Comma-separated language codes (e.g., en,es,ja)</div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input id="IncludeAutoGenSubs" name="IncludeAutoGenSubs" type="checkbox" is="emby-checkbox" />
+                                    <span>Include Auto-Generated Subtitles</span>
+                                </label>
+                            </div>
+                            <div class="selectContainer">
+                                <label class="selectLabel" for="SubtitleFormat">Subtitle Format</label>
+                                <select is="emby-select" id="SubtitleFormat" name="SubtitleFormat">
+                                    <option value="srt">SRT</option>
+                                    <option value="vtt">VTT</option>
+                                    <option value="ass">ASS</option>
+                                </select>
+                            </div>
+                            <div class="selectContainer">
+                                <label class="selectLabel" for="ThumbnailFormat">Thumbnail Format</label>
+                                <select is="emby-select" id="ThumbnailFormat" name="ThumbnailFormat">
+                                    <option value="jpg">JPG</option>
+                                    <option value="png">PNG</option>
+                                    <option value="webp">WebP</option>
+                                </select>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input id="DownloadChannelArt" name="DownloadChannelArt" type="checkbox" is="emby-checkbox" />
+                                    <span>Download Channel Artwork</span>
+                                </label>
+                            </div>
                         </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="ScheduleIntervalHours">Sync Interval (hours)</label>
-                            <input id="ScheduleIntervalHours" name="ScheduleIntervalHours" type="number" is="emby-input" min="1" max="168" />
+
+                        <div class="ytdlp-section">
+                            <h3>Actions</h3>
+                            <button is="emby-button" type="button" id="btnSync" class="raised button-submit block emby-button">
+                                <span>Sync Now</span>
+                            </button>
+                            <button is="emby-button" type="button" id="btnUpdateYtDlp" class="raised block emby-button" style="margin-top: 0.5em;">
+                                <span>Update yt-dlp</span>
+                            </button>
+                        </div>
+
+                        <div>
+                            <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                                <span>Save</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Download Settings -->
-                    <div class="ytdlp-section">
-                        <h3>Download Settings</h3>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="FormatString">Format String</label>
-                            <input id="FormatString" name="FormatString" type="text" is="emby-input" />
-                            <div class="fieldDescription">yt-dlp format selection string. Default: bestvideo*+bestaudio/best</div>
-                        </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="SubtitleLanguages">Subtitle Languages</label>
-                            <input id="SubtitleLanguages" name="SubtitleLanguages" type="text" is="emby-input" />
-                            <div class="fieldDescription">Comma-separated language codes (e.g., en,es,ja)</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input id="IncludeAutoGenSubs" name="IncludeAutoGenSubs" type="checkbox" is="emby-checkbox" />
-                                <span>Include Auto-Generated Subtitles</span>
-                            </label>
-                        </div>
-                        <div class="selectContainer">
-                            <label class="selectLabel" for="SubtitleFormat">Subtitle Format</label>
-                            <select is="emby-select" id="SubtitleFormat" name="SubtitleFormat">
-                                <option value="srt">SRT</option>
-                                <option value="vtt">VTT</option>
-                                <option value="ass">ASS</option>
-                            </select>
-                        </div>
-                        <div class="selectContainer">
-                            <label class="selectLabel" for="ThumbnailFormat">Thumbnail Format</label>
-                            <select is="emby-select" id="ThumbnailFormat" name="ThumbnailFormat">
-                                <option value="jpg">JPG</option>
-                                <option value="png">PNG</option>
-                                <option value="webp">WebP</option>
-                            </select>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input id="DownloadChannelArt" name="DownloadChannelArt" type="checkbox" is="emby-checkbox" />
-                                <span>Download Channel Artwork</span>
-                            </label>
+                    <!-- Sources Tab -->
+                    <div id="tab-sources" class="ytdlp-tab-content">
+                        <div class="ytdlp-section">
+                            <h3>YouTube Sources</h3>
+                            <p>Add YouTube channels or playlists to download from.</p>
+
+                            <div class="add-form">
+                                <h4>Add New Source</h4>
+                                <div class="form-row">
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="newSourceName">Name</label>
+                                        <input id="newSourceName" type="text" is="emby-input" placeholder="My Channel" />
+                                    </div>
+                                    <div class="selectContainer">
+                                        <label class="selectLabel" for="newSourceType">Type</label>
+                                        <select is="emby-select" id="newSourceType">
+                                            <option value="Channel">Channel</option>
+                                            <option value="Playlist">Playlist</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label class="inputLabel inputLabelUnfocused" for="newSourceUrl">URL</label>
+                                    <input id="newSourceUrl" type="text" is="emby-input" placeholder="https://www.youtube.com/@channel or playlist URL" />
+                                </div>
+                                <button is="emby-button" type="button" id="btnAddSource" class="raised button-submit emby-button">
+                                    <span>Add Source</span>
+                                </button>
+                            </div>
+
+                            <div id="sourcesList" class="item-list"></div>
                         </div>
                     </div>
 
-                    <!-- Actions -->
-                    <div class="ytdlp-section">
-                        <h3>Actions</h3>
-                        <button is="emby-button" type="button" id="btnSync" class="raised button-submit block emby-button">
-                            <span>Sync Now</span>
-                        </button>
-                        <button is="emby-button" type="button" id="btnUpdateYtDlp" class="raised block emby-button" style="margin-top: 0.5em;">
-                            <span>Update yt-dlp</span>
-                        </button>
+                    <!-- Rules Tab -->
+                    <div id="tab-rules" class="ytdlp-tab-content">
+                        <div class="ytdlp-section">
+                            <h3>Organization Rules</h3>
+                            <p>Create rules to organize videos into subfolders based on title, description, tags, or categories.</p>
+
+                            <div class="add-form">
+                                <h4>Add New Rule</h4>
+                                <div class="form-row">
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="newRuleName">Rule Name</label>
+                                        <input id="newRuleName" type="text" is="emby-input" placeholder="Gaming Videos" />
+                                    </div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="newRuleFolder">Folder Name</label>
+                                        <input id="newRuleFolder" type="text" is="emby-input" placeholder="Gaming" />
+                                    </div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="newRulePriority">Priority</label>
+                                        <input id="newRulePriority" type="number" is="emby-input" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div id="newRuleConditions" class="condition-list">
+                                    <p style="color: #888; margin: 0;">No conditions yet. Add conditions below.</p>
+                                </div>
+                                <div class="form-row" style="margin-top: 0.5em;">
+                                    <div class="selectContainer">
+                                        <label class="selectLabel" for="newConditionField">Field</label>
+                                        <select is="emby-select" id="newConditionField">
+                                            <option value="Title">Title</option>
+                                            <option value="Description">Description</option>
+                                            <option value="Tags">Tags</option>
+                                            <option value="Category">Category</option>
+                                        </select>
+                                    </div>
+                                    <div class="selectContainer">
+                                        <label class="selectLabel" for="newConditionOperator">Operator</label>
+                                        <select is="emby-select" id="newConditionOperator">
+                                            <option value="Contains">Contains</option>
+                                            <option value="StartsWith">Starts With</option>
+                                            <option value="EndsWith">Ends With</option>
+                                            <option value="Equals">Equals</option>
+                                            <option value="Regex">Regex</option>
+                                        </select>
+                                    </div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="newConditionValue">Value</label>
+                                        <input id="newConditionValue" type="text" is="emby-input" placeholder="gaming" />
+                                    </div>
+                                    <button is="emby-button" type="button" id="btnAddCondition" class="raised emby-button btn-secondary" style="align-self: flex-end;">
+                                        <span>+ Condition</span>
+                                    </button>
+                                </div>
+                                <button is="emby-button" type="button" id="btnAddRule" class="raised button-submit emby-button" style="margin-top: 1em;">
+                                    <span>Add Rule</span>
+                                </button>
+                            </div>
+
+                            <div id="rulesList" class="item-list"></div>
+                        </div>
                     </div>
 
-                    <div>
-                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
-                            <span>Save</span>
-                        </button>
+                    <!-- Channel Overrides Tab -->
+                    <div id="tab-overrides" class="ytdlp-tab-content">
+                        <div class="ytdlp-section">
+                            <h3>Channel Overrides</h3>
+                            <p>Rename channels or merge multiple channels into one.</p>
+
+                            <div class="add-form">
+                                <h4>Add Channel Override</h4>
+                                <div class="form-row">
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="newOverrideChannelId">Channel ID</label>
+                                        <input id="newOverrideChannelId" type="text" is="emby-input" placeholder="UC..." />
+                                        <div class="fieldDescription">The YouTube channel ID to override.</div>
+                                    </div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="newOverrideDisplayName">Display Name</label>
+                                        <input id="newOverrideDisplayName" type="text" is="emby-input" placeholder="My Custom Name" />
+                                        <div class="fieldDescription">Custom name to display instead of the channel name.</div>
+                                    </div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label class="inputLabel inputLabelUnfocused" for="newOverrideMergeTarget">Merge Into (Optional)</label>
+                                    <input id="newOverrideMergeTarget" type="text" is="emby-input" placeholder="UC... or leave empty" />
+                                    <div class="fieldDescription">Merge this channel's videos into another channel's folder.</div>
+                                </div>
+                                <button is="emby-button" type="button" id="btnAddOverride" class="raised button-submit emby-button">
+                                    <span>Add Override</span>
+                                </button>
+                            </div>
+
+                            <div id="overridesList" class="item-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- Import/Export Tab -->
+                    <div id="tab-importexport" class="ytdlp-tab-content">
+                        <div class="ytdlp-section">
+                            <h3>Import / Export Configuration</h3>
+                            <p>Export your sources, rules, and channel overrides to a JSON file, or import from a previous export.</p>
+
+                            <div class="import-export-row">
+                                <button is="emby-button" type="button" id="btnExport" class="raised button-submit emby-button">
+                                    <span>Export Configuration</span>
+                                </button>
+                                <button is="emby-button" type="button" id="btnImportTrigger" class="raised emby-button">
+                                    <span>Import Configuration</span>
+                                </button>
+                                <input type="file" id="importFile" accept=".json" class="hidden" />
+                            </div>
+
+                            <div class="add-form">
+                                <h4>Preview URL</h4>
+                                <p>Test a YouTube URL to see what metadata yt-dlp finds.</p>
+                                <div class="inline-form">
+                                    <div class="inputContainer" style="flex: 1;">
+                                        <input id="previewUrl" type="text" is="emby-input" placeholder="https://www.youtube.com/..." />
+                                    </div>
+                                    <button is="emby-button" type="button" id="btnPreview" class="raised emby-button">
+                                        <span>Preview</span>
+                                    </button>
+                                </div>
+                                <pre id="previewResult" style="background: #222; padding: 1em; border-radius: 4px; margin-top: 1em; overflow: auto; max-height: 300px; display: none;"></pre>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
         <script type="text/javascript">
             var YtDlpConfig = {
-                pluginUniqueId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+                pluginUniqueId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+                config: null,
+                pendingConditions: []
             };
+
+            // Tab switching
+            document.querySelectorAll('.ytdlp-tab').forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.ytdlp-tab').forEach(function(t) { t.classList.remove('active'); });
+                    document.querySelectorAll('.ytdlp-tab-content').forEach(function(c) { c.classList.remove('active'); });
+                    tab.classList.add('active');
+                    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+                });
+            });
 
             function updateStatus() {
                 ApiClient.fetch({
@@ -120,7 +329,6 @@
                 }).then(function(status) {
                     var statusEl = document.querySelector('#statusSection');
                     var textEl = document.querySelector('#statusText');
-
                     if (status.YtDlpAvailable) {
                         statusEl.className = 'ytdlp-status ok';
                         textEl.textContent = 'yt-dlp v' + status.YtDlpVersion + ' - ' +
@@ -137,49 +345,308 @@
                 });
             }
 
-            document.querySelector('#YtDlpConfigPage')
-                .addEventListener('pageshow', function() {
-                    Dashboard.showLoadingMsg();
-                    updateStatus();
+            function renderSources() {
+                var list = document.getElementById('sourcesList');
+                var sources = YtDlpConfig.config.Sources || [];
+                if (sources.length === 0) {
+                    list.innerHTML = '<p style="color: #888;">No sources configured. Add a channel or playlist above.</p>';
+                    return;
+                }
+                list.innerHTML = sources.map(function(source, index) {
+                    return '<div class="item-card' + (source.Enabled ? '' : ' disabled') + '">' +
+                        '<div class="item-card-header">' +
+                            '<div>' +
+                                '<div class="item-card-title">' + escapeHtml(source.Name || 'Unnamed') + '</div>' +
+                                '<div class="item-card-subtitle">' + escapeHtml(source.Type) + ': ' + escapeHtml(source.Url) + '</div>' +
+                            '</div>' +
+                            '<div class="item-card-actions">' +
+                                '<button is="emby-button" type="button" class="raised emby-button btn-small" onclick="toggleSource(' + index + ')">' +
+                                    (source.Enabled ? 'Disable' : 'Enable') +
+                                '</button>' +
+                                '<button is="emby-button" type="button" class="raised emby-button btn-small btn-danger" onclick="deleteSource(' + index + ')">Delete</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            }
 
-                    ApiClient.getPluginConfiguration(YtDlpConfig.pluginUniqueId).then(function(config) {
-                        document.querySelector('#DownloadPath').value = config.DownloadPath || '';
-                        document.querySelector('#ScheduleEnabled').checked = config.ScheduleEnabled;
-                        document.querySelector('#ScheduleIntervalHours').value = config.ScheduleIntervalHours || 24;
-                        document.querySelector('#FormatString').value = config.FormatString || 'bestvideo*+bestaudio/best';
-                        document.querySelector('#SubtitleLanguages').value = (config.SubtitleLanguages || []).join(',');
-                        document.querySelector('#IncludeAutoGenSubs').checked = config.IncludeAutoGenSubs;
-                        document.querySelector('#SubtitleFormat').value = config.SubtitleFormat || 'srt';
-                        document.querySelector('#ThumbnailFormat').value = config.ThumbnailFormat || 'jpg';
-                        document.querySelector('#DownloadChannelArt').checked = config.DownloadChannelArt;
-                        Dashboard.hideLoadingMsg();
+            function renderRules() {
+                var list = document.getElementById('rulesList');
+                var rules = YtDlpConfig.config.GlobalRules || [];
+                if (rules.length === 0) {
+                    list.innerHTML = '<p style="color: #888;">No rules configured. Add a rule above to organize videos into subfolders.</p>';
+                    return;
+                }
+                list.innerHTML = rules.map(function(rule, index) {
+                    var conditions = (rule.Conditions || []).map(function(c) {
+                        return c.Field + ' ' + c.Operator + ' "' + c.Value + '"';
+                    }).join(' AND ');
+                    return '<div class="item-card">' +
+                        '<div class="item-card-header">' +
+                            '<div>' +
+                                '<div class="item-card-title">' + escapeHtml(rule.Name || 'Unnamed Rule') + ' → /' + escapeHtml(rule.FolderName) + '/</div>' +
+                                '<div class="item-card-subtitle">Priority: ' + rule.Priority + ' | Conditions: ' + (conditions || 'None') + '</div>' +
+                            '</div>' +
+                            '<div class="item-card-actions">' +
+                                '<button is="emby-button" type="button" class="raised emby-button btn-small btn-danger" onclick="deleteRule(' + index + ')">Delete</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            }
+
+            function renderOverrides() {
+                var list = document.getElementById('overridesList');
+                var overrides = YtDlpConfig.config.ChannelOverrides || [];
+                if (overrides.length === 0) {
+                    list.innerHTML = '<p style="color: #888;">No channel overrides configured.</p>';
+                    return;
+                }
+                list.innerHTML = overrides.map(function(override, index) {
+                    var subtitle = 'Display as: ' + escapeHtml(override.DisplayName || '(unchanged)');
+                    if (override.MergeIntoChannelId) {
+                        subtitle += ' | Merge into: ' + escapeHtml(override.MergeIntoChannelId);
+                    }
+                    return '<div class="item-card">' +
+                        '<div class="item-card-header">' +
+                            '<div>' +
+                                '<div class="item-card-title">' + escapeHtml(override.ChannelId) + '</div>' +
+                                '<div class="item-card-subtitle">' + subtitle + '</div>' +
+                            '</div>' +
+                            '<div class="item-card-actions">' +
+                                '<button is="emby-button" type="button" class="raised emby-button btn-small btn-danger" onclick="deleteOverride(' + index + ')">Delete</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            }
+
+            function renderPendingConditions() {
+                var container = document.getElementById('newRuleConditions');
+                if (YtDlpConfig.pendingConditions.length === 0) {
+                    container.innerHTML = '<p style="color: #888; margin: 0;">No conditions yet. Add conditions below.</p>';
+                    return;
+                }
+                container.innerHTML = YtDlpConfig.pendingConditions.map(function(c, i) {
+                    return '<div class="condition-item">' +
+                        '<span>' + c.Field + ' ' + c.Operator + ' "' + escapeHtml(c.Value) + '"</span>' +
+                        '<button is="emby-button" type="button" class="emby-button btn-small btn-danger" onclick="removePendingCondition(' + i + ')">X</button>' +
+                    '</div>';
+                }).join('');
+            }
+
+            function escapeHtml(text) {
+                var div = document.createElement('div');
+                div.textContent = text || '';
+                return div.innerHTML;
+            }
+
+            function saveConfig() {
+                return ApiClient.updatePluginConfiguration(YtDlpConfig.pluginUniqueId, YtDlpConfig.config);
+            }
+
+            // Source functions
+            window.toggleSource = function(index) {
+                YtDlpConfig.config.Sources[index].Enabled = !YtDlpConfig.config.Sources[index].Enabled;
+                saveConfig().then(function() {
+                    renderSources();
+                });
+            };
+
+            window.deleteSource = function(index) {
+                if (confirm('Delete this source?')) {
+                    YtDlpConfig.config.Sources.splice(index, 1);
+                    saveConfig().then(function() {
+                        renderSources();
                     });
+                }
+            };
+
+            // Rule functions
+            window.deleteRule = function(index) {
+                if (confirm('Delete this rule?')) {
+                    YtDlpConfig.config.GlobalRules.splice(index, 1);
+                    saveConfig().then(function() {
+                        renderRules();
+                    });
+                }
+            };
+
+            window.removePendingCondition = function(index) {
+                YtDlpConfig.pendingConditions.splice(index, 1);
+                renderPendingConditions();
+            };
+
+            // Override functions
+            window.deleteOverride = function(index) {
+                if (confirm('Delete this override?')) {
+                    YtDlpConfig.config.ChannelOverrides.splice(index, 1);
+                    saveConfig().then(function() {
+                        renderOverrides();
+                    });
+                }
+            };
+
+            // Page load
+            document.querySelector('#YtDlpConfigPage').addEventListener('pageshow', function() {
+                Dashboard.showLoadingMsg();
+                updateStatus();
+
+                ApiClient.getPluginConfiguration(YtDlpConfig.pluginUniqueId).then(function(config) {
+                    YtDlpConfig.config = config;
+                    document.querySelector('#DownloadPath').value = config.DownloadPath || '';
+                    document.querySelector('#ScheduleEnabled').checked = config.ScheduleEnabled;
+                    document.querySelector('#ScheduleIntervalHours').value = config.ScheduleIntervalHours || 24;
+                    document.querySelector('#FormatString').value = config.FormatString || 'bestvideo*+bestaudio/best';
+                    document.querySelector('#SubtitleLanguages').value = (config.SubtitleLanguages || []).join(',');
+                    document.querySelector('#IncludeAutoGenSubs').checked = config.IncludeAutoGenSubs;
+                    document.querySelector('#SubtitleFormat').value = config.SubtitleFormat || 'srt';
+                    document.querySelector('#ThumbnailFormat').value = config.ThumbnailFormat || 'jpg';
+                    document.querySelector('#DownloadChannelArt').checked = config.DownloadChannelArt;
+
+                    config.Sources = config.Sources || [];
+                    config.GlobalRules = config.GlobalRules || [];
+                    config.ChannelOverrides = config.ChannelOverrides || [];
+
+                    renderSources();
+                    renderRules();
+                    renderOverrides();
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+            // Form submit (general settings)
+            document.querySelector('#YtDlpConfigForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+
+                YtDlpConfig.config.DownloadPath = document.querySelector('#DownloadPath').value;
+                YtDlpConfig.config.ScheduleEnabled = document.querySelector('#ScheduleEnabled').checked;
+                YtDlpConfig.config.ScheduleIntervalHours = parseInt(document.querySelector('#ScheduleIntervalHours').value, 10);
+                YtDlpConfig.config.FormatString = document.querySelector('#FormatString').value;
+                YtDlpConfig.config.SubtitleLanguages = document.querySelector('#SubtitleLanguages').value.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; });
+                YtDlpConfig.config.IncludeAutoGenSubs = document.querySelector('#IncludeAutoGenSubs').checked;
+                YtDlpConfig.config.SubtitleFormat = document.querySelector('#SubtitleFormat').value;
+                YtDlpConfig.config.ThumbnailFormat = document.querySelector('#ThumbnailFormat').value;
+                YtDlpConfig.config.DownloadChannelArt = document.querySelector('#DownloadChannelArt').checked;
+
+                saveConfig().then(function(result) {
+                    Dashboard.processPluginConfigurationUpdateResult(result);
                 });
 
-            document.querySelector('#YtDlpConfigForm')
-                .addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    Dashboard.showLoadingMsg();
+                return false;
+            });
 
-                    ApiClient.getPluginConfiguration(YtDlpConfig.pluginUniqueId).then(function(config) {
-                        config.DownloadPath = document.querySelector('#DownloadPath').value;
-                        config.ScheduleEnabled = document.querySelector('#ScheduleEnabled').checked;
-                        config.ScheduleIntervalHours = parseInt(document.querySelector('#ScheduleIntervalHours').value, 10);
-                        config.FormatString = document.querySelector('#FormatString').value;
-                        config.SubtitleLanguages = document.querySelector('#SubtitleLanguages').value.split(',').map(s => s.trim()).filter(s => s);
-                        config.IncludeAutoGenSubs = document.querySelector('#IncludeAutoGenSubs').checked;
-                        config.SubtitleFormat = document.querySelector('#SubtitleFormat').value;
-                        config.ThumbnailFormat = document.querySelector('#ThumbnailFormat').value;
-                        config.DownloadChannelArt = document.querySelector('#DownloadChannelArt').checked;
+            // Add Source
+            document.querySelector('#btnAddSource').addEventListener('click', function() {
+                var name = document.querySelector('#newSourceName').value.trim();
+                var url = document.querySelector('#newSourceUrl').value.trim();
+                var type = document.querySelector('#newSourceType').value;
 
-                        ApiClient.updatePluginConfiguration(YtDlpConfig.pluginUniqueId, config).then(function(result) {
-                            Dashboard.processPluginConfigurationUpdateResult(result);
-                        });
-                    });
+                if (!name || !url) {
+                    Dashboard.alert('Please enter a name and URL');
+                    return;
+                }
 
-                    return false;
+                YtDlpConfig.config.Sources = YtDlpConfig.config.Sources || [];
+                YtDlpConfig.config.Sources.push({
+                    Id: crypto.randomUUID(),
+                    Name: name,
+                    Url: url,
+                    Type: type,
+                    Enabled: true,
+                    Rules: []
                 });
 
+                saveConfig().then(function() {
+                    document.querySelector('#newSourceName').value = '';
+                    document.querySelector('#newSourceUrl').value = '';
+                    renderSources();
+                    Dashboard.alert('Source added');
+                });
+            });
+
+            // Add Condition
+            document.querySelector('#btnAddCondition').addEventListener('click', function() {
+                var field = document.querySelector('#newConditionField').value;
+                var operator = document.querySelector('#newConditionOperator').value;
+                var value = document.querySelector('#newConditionValue').value.trim();
+
+                if (!value) {
+                    Dashboard.alert('Please enter a condition value');
+                    return;
+                }
+
+                YtDlpConfig.pendingConditions.push({
+                    Field: field,
+                    Operator: operator,
+                    Value: value
+                });
+
+                document.querySelector('#newConditionValue').value = '';
+                renderPendingConditions();
+            });
+
+            // Add Rule
+            document.querySelector('#btnAddRule').addEventListener('click', function() {
+                var name = document.querySelector('#newRuleName').value.trim();
+                var folder = document.querySelector('#newRuleFolder').value.trim();
+                var priority = parseInt(document.querySelector('#newRulePriority').value, 10) || 0;
+
+                if (!name || !folder) {
+                    Dashboard.alert('Please enter a rule name and folder name');
+                    return;
+                }
+
+                YtDlpConfig.config.GlobalRules = YtDlpConfig.config.GlobalRules || [];
+                YtDlpConfig.config.GlobalRules.push({
+                    Id: crypto.randomUUID(),
+                    Name: name,
+                    FolderName: folder,
+                    Priority: priority,
+                    Conditions: YtDlpConfig.pendingConditions.slice(),
+                    Children: []
+                });
+
+                saveConfig().then(function() {
+                    document.querySelector('#newRuleName').value = '';
+                    document.querySelector('#newRuleFolder').value = '';
+                    document.querySelector('#newRulePriority').value = '0';
+                    YtDlpConfig.pendingConditions = [];
+                    renderPendingConditions();
+                    renderRules();
+                    Dashboard.alert('Rule added');
+                });
+            });
+
+            // Add Override
+            document.querySelector('#btnAddOverride').addEventListener('click', function() {
+                var channelId = document.querySelector('#newOverrideChannelId').value.trim();
+                var displayName = document.querySelector('#newOverrideDisplayName').value.trim();
+                var mergeTarget = document.querySelector('#newOverrideMergeTarget').value.trim();
+
+                if (!channelId) {
+                    Dashboard.alert('Please enter a channel ID');
+                    return;
+                }
+
+                YtDlpConfig.config.ChannelOverrides = YtDlpConfig.config.ChannelOverrides || [];
+                YtDlpConfig.config.ChannelOverrides.push({
+                    ChannelId: channelId,
+                    DisplayName: displayName || null,
+                    MergeIntoChannelId: mergeTarget || null
+                });
+
+                saveConfig().then(function() {
+                    document.querySelector('#newOverrideChannelId').value = '';
+                    document.querySelector('#newOverrideDisplayName').value = '';
+                    document.querySelector('#newOverrideMergeTarget').value = '';
+                    renderOverrides();
+                    Dashboard.alert('Override added');
+                });
+            });
+
+            // Sync button
             document.querySelector('#btnSync').addEventListener('click', function() {
                 Dashboard.showLoadingMsg();
                 ApiClient.fetch({
@@ -195,6 +662,7 @@
                 });
             });
 
+            // Update yt-dlp button
             document.querySelector('#btnUpdateYtDlp').addEventListener('click', function() {
                 Dashboard.showLoadingMsg();
                 ApiClient.fetch({
@@ -207,6 +675,82 @@
                 }).catch(function(err) {
                     Dashboard.hideLoadingMsg();
                     Dashboard.alert('Update failed: ' + (err.message || 'Unknown error'));
+                });
+            });
+
+            // Export
+            document.querySelector('#btnExport').addEventListener('click', function() {
+                ApiClient.fetch({
+                    url: ApiClient.getUrl('Plugins/YtDlp/Export'),
+                    type: 'GET'
+                }).then(function(data) {
+                    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'ytdlp-config-' + new Date().toISOString().split('T')[0] + '.json';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+            });
+
+            // Import
+            document.querySelector('#btnImportTrigger').addEventListener('click', function() {
+                document.querySelector('#importFile').click();
+            });
+
+            document.querySelector('#importFile').addEventListener('change', function(e) {
+                var file = e.target.files[0];
+                if (!file) return;
+
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        var data = JSON.parse(e.target.result);
+                        ApiClient.fetch({
+                            url: ApiClient.getUrl('Plugins/YtDlp/Import'),
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify(data)
+                        }).then(function() {
+                            Dashboard.alert('Configuration imported. Reloading...');
+                            setTimeout(function() { location.reload(); }, 1000);
+                        }).catch(function(err) {
+                            Dashboard.alert('Import failed: ' + (err.message || 'Unknown error'));
+                        });
+                    } catch (err) {
+                        Dashboard.alert('Invalid JSON file');
+                    }
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+            });
+
+            // Preview
+            document.querySelector('#btnPreview').addEventListener('click', function() {
+                var url = document.querySelector('#previewUrl').value.trim();
+                if (!url) {
+                    Dashboard.alert('Please enter a URL');
+                    return;
+                }
+
+                Dashboard.showLoadingMsg();
+                var resultEl = document.querySelector('#previewResult');
+                resultEl.style.display = 'none';
+
+                ApiClient.fetch({
+                    url: ApiClient.getUrl('Plugins/YtDlp/Preview') + '?url=' + encodeURIComponent(url),
+                    type: 'GET'
+                }).then(function(data) {
+                    Dashboard.hideLoadingMsg();
+                    resultEl.textContent = JSON.stringify(data, null, 2);
+                    resultEl.style.display = 'block';
+                }).catch(function(err) {
+                    Dashboard.hideLoadingMsg();
+                    resultEl.textContent = 'Error: ' + (err.message || 'Failed to fetch metadata');
+                    resultEl.style.display = 'block';
                 });
             });
         </script>
