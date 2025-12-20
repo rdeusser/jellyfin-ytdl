@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -140,8 +141,8 @@ public class YtDlpWrapper : IYtDlpWrapper
         }
 
         var archiveEntry = $"youtube {videoId}";
-        var content = File.ReadAllText(archivePath);
-        return content.Contains(archiveEntry, StringComparison.Ordinal);
+        return File.ReadLines(archivePath)
+            .Any(line => line.Equals(archiveEntry, StringComparison.Ordinal));
     }
 
     /// <inheritdoc />
