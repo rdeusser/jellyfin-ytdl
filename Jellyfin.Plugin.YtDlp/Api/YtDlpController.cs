@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
@@ -82,13 +83,43 @@ public class YtDlpController : ControllerBase
     /// <returns>Action result.</returns>
     [HttpPost("UpdateYtDlp")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    #pragma warning disable CA3003 // Path comes from internal config, not user input
     public async Task<ActionResult> UpdateYtDlp(CancellationToken cancellationToken)
     {
-        await _binaryManager.UpdateAsync(cancellationToken).ConfigureAwait(false);
-        var version = await _binaryManager.GetVersionAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await _binaryManager.UpdateAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = $"Download failed: {ex.Message}" });
+        }
 
-        return Ok(new { version });
+        var binaryPath = await _binaryManager.GetBinaryPathAsync(cancellationToken).ConfigureAwait(false);
+
+        if (!System.IO.File.Exists(binaryPath))
+        {
+            return StatusCode(500, new { error = $"Binary not found at {binaryPath}" });
+        }
+
+        try
+        {
+            var version = await _binaryManager.GetVersionAsync(cancellationToken).ConfigureAwait(false);
+
+            if (string.IsNullOrEmpty(version))
+            {
+                return StatusCode(500, new { error = $"Binary exists at {binaryPath} but returned empty version." });
+            }
+
+            return Ok(new { version });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = $"Binary exists at {binaryPath} but failed to execute: {ex.Message}" });
+        }
     }
+    #pragma warning restore CA3003
 
     /// <summary>
     /// Fetches metadata for a URL without downloading.

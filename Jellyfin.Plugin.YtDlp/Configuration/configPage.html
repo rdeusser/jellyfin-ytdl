@@ -670,8 +670,12 @@
                     type: 'POST'
                 }).then(function(result) {
                     Dashboard.hideLoadingMsg();
-                    Dashboard.alert('yt-dlp updated to v' + result.version);
-                    updateStatus();
+                    if (result.error) {
+                        Dashboard.alert('Update failed: ' + result.error);
+                    } else {
+                        Dashboard.alert('yt-dlp updated to ' + result.version);
+                        updateStatus();
+                    }
                 }).catch(function(err) {
                     Dashboard.hideLoadingMsg();
                     Dashboard.alert('Update failed: ' + (err.message || 'Unknown error'));
