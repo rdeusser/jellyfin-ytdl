@@ -44,7 +44,7 @@ NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
 
 echo "Current version: $LATEST_TAG"
 echo "New version: $NEW_VERSION"
-read -rp "Release $NEW_VERSION? [y/N] " CONFIRM
+read -rp "Tag $NEW_VERSION? [y/N] " CONFIRM
 
 if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
     git tag -a "$NEW_VERSION" -m "$NEW_VERSION"
