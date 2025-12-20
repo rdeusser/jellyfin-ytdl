@@ -7,12 +7,67 @@ on:
   workflow_dispatch:
 
 jobs:
-  call:
-    uses: jellyfin/jellyfin-meta-plugins/.github/workflows/publish.yaml@master
-    with:
-      version: ${{ github.event.release.tag_name }}
-      is-unstable: ${{ github.event.release.prerelease }}
-    secrets:
-      deploy-host: ${{ secrets.DEPLOY_HOST }}
-      deploy-user: ${{ secrets.DEPLOY_USER }}
-      deploy-key: ${{ secrets.DEPLOY_KEY }}
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Get version
+        id: version
+        run: |
+          TAG=${{ github.event.release.tag_name }}
+          VERSION=${TAG#v}.0
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: dotnet build -c Release
+
+      - name: Create plugin zip
+        run: |
+          mkdir -p release
+          cp Jellyfin.Plugin.YtDlp/bin/Release/net9.0/Jellyfin.Plugin.YtDlp.dll release/
+          cd release
+          zip ../jellyfin-ytdl_${{ steps.version.outputs.version }}.zip *
+
+      - name: Calculate checksum
+        id: checksum
+        run: |
+          CHECKSUM=$(md5sum jellyfin-ytdl_${{ steps.version.outputs.version }}.zip | cut -d' ' -f1)
+          echo "md5=$CHECKSUM" >> $GITHUB_OUTPUT
+
+      - name: Upload release asset
+        run: gh release upload ${{ github.event.release.tag_name }} jellyfin-ytdl_${{ steps.version.outputs.version }}.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update manifest
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          jq --arg version "${{ steps.version.outputs.version }}" \
+             --arg checksum "${{ steps.checksum.outputs.md5 }}" \
+             --arg timestamp "$TIMESTAMP" \
+             --arg url "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/jellyfin-ytdl_${{ steps.version.outputs.version }}.zip" \
+             '.[0].versions = [{
+               version: $version,
+               changelog: "See release notes",
+               targetAbi: "10.10.0.0",
+               sourceUrl: $url,
+               checksum: $checksum,
+               timestamp: $timestamp
+             }] + .[0].versions' manifest.json > manifest.tmp && mv manifest.tmp manifest.json
+
+      - name: Commit manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git commit -m "chore: update manifest for ${{ github.event.release.tag_name }}"
+          git push
