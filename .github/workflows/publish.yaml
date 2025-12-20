@@ -1,9 +1,9 @@
 name: '🚀 Publish Plugin'
 
 on:
-  release:
-    types:
-      - released
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -23,8 +23,9 @@ jobs:
       - name: Get version
         id: version
         run: |
-          TAG=${{ github.event.release.tag_name }}
+          TAG=${GITHUB_REF#refs/tags/}
           VERSION=${TAG#v}.0
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build
@@ -43,10 +44,11 @@ jobs:
           CHECKSUM=$(md5sum jellyfin-ytdl_${{ steps.version.outputs.version }}.zip | cut -d' ' -f1)
           echo "md5=$CHECKSUM" >> $GITHUB_OUTPUT
 
-      - name: Upload release asset
-        run: gh release upload ${{ github.event.release.tag_name }} jellyfin-ytdl_${{ steps.version.outputs.version }}.zip
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: jellyfin-ytdl_${{ steps.version.outputs.version }}.zip
+          generate_release_notes: true
 
       - name: Update manifest
         run: |
@@ -54,7 +56,7 @@ jobs:
           jq --arg version "${{ steps.version.outputs.version }}" \
              --arg checksum "${{ steps.checksum.outputs.md5 }}" \
              --arg timestamp "$TIMESTAMP" \
-             --arg url "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/jellyfin-ytdl_${{ steps.version.outputs.version }}.zip" \
+             --arg url "https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/jellyfin-ytdl_${{ steps.version.outputs.version }}.zip" \
              '.[0].versions = [{
                version: $version,
                changelog: "See release notes",
@@ -68,6 +70,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          cp manifest.json /tmp/manifest.json
+          git fetch origin master
+          git checkout master
+          cp /tmp/manifest.json manifest.json
           git add manifest.json
-          git commit -m "chore: update manifest for ${{ github.event.release.tag_name }}"
-          git push
+          git commit -m "chore: update manifest for ${{ steps.version.outputs.tag }}"
+          git push origin master

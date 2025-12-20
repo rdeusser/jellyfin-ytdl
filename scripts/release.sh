@@ -49,5 +49,4 @@ read -rp "Release $NEW_VERSION? [y/N] " CONFIRM
 if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
     git tag -a "$NEW_VERSION" -m "$NEW_VERSION"
     git push origin "$NEW_VERSION"
-    gh release create "$NEW_VERSION" --generate-notes
 fi
