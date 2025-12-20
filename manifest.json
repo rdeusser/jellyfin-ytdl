@@ -1,0 +1,20 @@
+[
+  {
+    "guid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "yt-dlp",
+    "description": "Downloads and organizes YouTube content using yt-dlp. Supports channels, playlists, configurable rules for folder organization, NFO metadata generation, subtitles, and scheduled syncs.",
+    "overview": "Download YouTube content to your library",
+    "owner": "rdeusser",
+    "category": "General",
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "changelog": "Initial release",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/rdeusser/jellyfin-ytdl/releases/download/v1.0.0/jellyfin-ytdl_1.0.0.0.zip",
+        "checksum": "",
+        "timestamp": "2025-12-20T00:00:00Z"
+      }
+    ]
+  }
+]
