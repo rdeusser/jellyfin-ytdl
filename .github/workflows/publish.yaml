@@ -41,6 +41,17 @@ jobs:
         run: |
           mkdir -p release
           cp Jellyfin.Plugin.YtDlp/bin/Release/net9.0/Jellyfin.Plugin.YtDlp.dll release/
+          jq -n \
+            --arg guid "a1b2c3d4-e5f6-7890-abcd-ef1234567890" \
+            --arg name "yt-dlp" \
+            --arg desc "Downloads and organizes YouTube content using yt-dlp" \
+            --arg owner "rdeusser" \
+            --arg category "General" \
+            --arg version "${{ steps.version.outputs.semver }}" \
+            --arg abi "10.10.0.0" \
+            --arg overview "Download YouTube content to your library" \
+            '{guid: $guid, name: $name, description: $desc, owner: $owner, category: $category, version: $version, targetAbi: $abi, overview: $overview, imageUrl: ""}' \
+            > release/meta.json
           cd release
           zip ../jellyfin-ytdl_${{ steps.version.outputs.version }}.zip *
 
