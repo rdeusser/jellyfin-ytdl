@@ -675,9 +675,10 @@
             // Update yt-dlp button
             document.querySelector('#btnUpdateYtDlp').addEventListener('click', function() {
                 Dashboard.showLoadingMsg();
-                ApiClient.fetch({
+                ApiClient.ajax({
                     url: ApiClient.getUrl('Plugins/YtDlp/UpdateYtDlp'),
-                    type: 'POST'
+                    type: 'POST',
+                    dataType: 'json'
                 }).then(function(result) {
                     Dashboard.hideLoadingMsg();
                     if (result && result.version) {
@@ -686,19 +687,17 @@
                     } else if (result && result.error) {
                         Dashboard.alert('Update failed: ' + result.error);
                     } else {
-                        Dashboard.alert('Update failed: unexpected response');
+                        console.log('UpdateYtDlp result:', result);
+                        Dashboard.alert('Update completed');
+                        updateStatus();
                     }
                 }).catch(function(err) {
                     Dashboard.hideLoadingMsg();
-                    var msg = 'Unknown error';
-                    if (err && err.response) {
-                        err.response.json().then(function(body) {
-                            Dashboard.alert('Update failed: ' + (body.error || 'Unknown error'));
-                        }).catch(function() {
-                            Dashboard.alert('Update failed: ' + (err.message || msg));
-                        });
+                    console.log('UpdateYtDlp error:', err);
+                    if (err && err.status === 500) {
+                        Dashboard.alert('Update failed: server error');
                     } else {
-                        Dashboard.alert('Update failed: ' + (err.message || msg));
+                        Dashboard.alert('Update failed: ' + (err.statusText || 'unknown error'));
                     }
                 });
             });
