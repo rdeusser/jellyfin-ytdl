@@ -331,9 +331,10 @@
             });
 
             function updateStatus() {
-                ApiClient.fetch({
+                ApiClient.ajax({
                     url: ApiClient.getUrl('Plugins/YtDlp/Status'),
-                    type: 'GET'
+                    type: 'GET',
+                    dataType: 'json'
                 }).then(function(status) {
                     console.log('Status response:', status);
                     var statusEl = document.querySelector('#statusSection');
