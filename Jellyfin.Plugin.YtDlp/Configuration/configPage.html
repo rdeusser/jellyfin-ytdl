@@ -331,10 +331,10 @@
             });
 
             function updateStatus() {
-                ApiClient.ajax({
-                    url: ApiClient.getUrl('Plugins/YtDlp/Status'),
-                    type: 'GET',
-                    dataType: 'json'
+                fetch(ApiClient.getUrl('Plugins/YtDlp/Status'), {
+                    headers: { 'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"' }
+                }).then(function(response) {
+                    return response.json();
                 }).then(function(status) {
                     console.log('Status response:', status);
                     var statusEl = document.querySelector('#statusSection');
@@ -353,7 +353,8 @@
                         statusEl.className = 'ytdlp-status error';
                         textEl.textContent = 'yt-dlp not available. Expected at: ' + (path || 'unknown');
                     }
-                }).catch(function() {
+                }).catch(function(err) {
+                    console.log('Status error:', err);
                     var statusEl = document.querySelector('#statusSection');
                     statusEl.className = 'ytdlp-status error';
                     document.querySelector('#statusText').textContent = 'Could not fetch status';
@@ -682,30 +683,29 @@
             // Update yt-dlp button
             document.querySelector('#btnUpdateYtDlp').addEventListener('click', function() {
                 Dashboard.showLoadingMsg();
-                ApiClient.ajax({
-                    url: ApiClient.getUrl('Plugins/YtDlp/UpdateYtDlp'),
-                    type: 'POST',
-                    dataType: 'json'
+                fetch(ApiClient.getUrl('Plugins/YtDlp/UpdateYtDlp'), {
+                    method: 'POST',
+                    headers: { 'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"' }
+                }).then(function(response) {
+                    return response.json().then(function(data) {
+                        return { ok: response.ok, data: data };
+                    });
                 }).then(function(result) {
                     Dashboard.hideLoadingMsg();
-                    if (result && result.version) {
-                        Dashboard.alert('yt-dlp updated to v' + result.version);
+                    console.log('UpdateYtDlp result:', result);
+                    if (result.ok && result.data.version) {
+                        Dashboard.alert('yt-dlp updated to v' + result.data.version);
                         updateStatus();
-                    } else if (result && result.error) {
-                        Dashboard.alert('Update failed: ' + result.error);
+                    } else if (result.data.error) {
+                        Dashboard.alert('Update failed: ' + result.data.error);
                     } else {
-                        console.log('UpdateYtDlp result:', result);
                         Dashboard.alert('Update completed');
                         updateStatus();
                     }
                 }).catch(function(err) {
                     Dashboard.hideLoadingMsg();
                     console.log('UpdateYtDlp error:', err);
-                    if (err && err.status === 500) {
-                        Dashboard.alert('Update failed: server error');
-                    } else {
-                        Dashboard.alert('Update failed: ' + (err.statusText || 'unknown error'));
-                    }
+                    Dashboard.alert('Update failed: ' + (err.message || 'unknown error'));
                 });
             });
 
