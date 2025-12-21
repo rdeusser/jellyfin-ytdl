@@ -8,6 +8,14 @@
     "category": "General",
     "versions": [
       {
+        "version": "0.1.5.0",
+        "changelog": "See release notes",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/rdeusser/jellyfin-ytdl/releases/download/v0.1.5/jellyfin-ytdl_0.1.5.0.zip",
+        "checksum": "56a0653a5dea467ee3ece267792276cc",
+        "timestamp": "2025-12-21T18:33:03Z"
+      },
+      {
         "version": "0.1.4.0",
         "changelog": "See release notes",
         "targetAbi": "10.10.0.0",
