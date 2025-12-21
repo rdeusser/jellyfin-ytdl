@@ -336,25 +336,18 @@
                 }).then(function(response) {
                     return response.json();
                 }).then(function(status) {
-                    console.log('Status response:', status);
                     var statusEl = document.querySelector('#statusSection');
                     var textEl = document.querySelector('#statusText');
-                    var available = status.ytDlpAvailable || status.YtDlpAvailable;
-                    var version = status.ytDlpVersion || status.YtDlpVersion;
-                    var syncing = status.isSyncing || status.IsSyncing;
-                    var lastSync = status.lastSyncTime || status.LastSyncTime;
-                    var path = status.binaryPath || status.BinaryPath;
-                    if (available) {
+                    if (status.YtDlpAvailable) {
                         statusEl.className = 'ytdlp-status ok';
-                        textEl.textContent = 'yt-dlp v' + version + ' - ' +
-                            (syncing ? 'Syncing...' : 'Ready') +
-                            (lastSync ? ' (Last sync: ' + new Date(lastSync).toLocaleString() + ')' : '');
+                        textEl.textContent = 'yt-dlp v' + status.YtDlpVersion + ' - ' +
+                            (status.IsSyncing ? 'Syncing...' : 'Ready') +
+                            (status.LastSyncTime ? ' (Last sync: ' + new Date(status.LastSyncTime).toLocaleString() + ')' : '');
                     } else {
                         statusEl.className = 'ytdlp-status error';
-                        textEl.textContent = 'yt-dlp not available. Expected at: ' + (path || 'unknown');
+                        textEl.textContent = 'yt-dlp not available. Expected at: ' + (status.BinaryPath || 'unknown');
                     }
-                }).catch(function(err) {
-                    console.log('Status error:', err);
+                }).catch(function() {
                     var statusEl = document.querySelector('#statusSection');
                     statusEl.className = 'ytdlp-status error';
                     document.querySelector('#statusText').textContent = 'Could not fetch status';
@@ -692,7 +685,6 @@
                     });
                 }).then(function(result) {
                     Dashboard.hideLoadingMsg();
-                    console.log('UpdateYtDlp result:', result);
                     if (result.ok && result.data.version) {
                         Dashboard.alert('yt-dlp updated to v' + result.data.version);
                         updateStatus();
@@ -704,7 +696,6 @@
                     }
                 }).catch(function(err) {
                     Dashboard.hideLoadingMsg();
-                    console.log('UpdateYtDlp error:', err);
                     Dashboard.alert('Update failed: ' + (err.message || 'unknown error'));
                 });
             });
