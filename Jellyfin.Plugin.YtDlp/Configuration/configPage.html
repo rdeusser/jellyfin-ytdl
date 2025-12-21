@@ -46,9 +46,20 @@
             <div class="content-primary">
                 <h2>yt-dlp Settings</h2>
 
-                <!-- Status Section -->
-                <div id="statusSection" class="ytdlp-status">
-                    <span id="statusText">Checking status...</span>
+                <!-- yt-dlp Section -->
+                <div class="ytdlp-section">
+                    <h3>yt-dlp</h3>
+                    <div id="statusSection" class="ytdlp-status">
+                        <span id="statusText">Checking status...</span>
+                    </div>
+                    <div class="inputContainer" style="margin-top: 1em;">
+                        <label class="inputLabel inputLabelUnfocused" for="YtDlpPath">yt-dlp Path (optional)</label>
+                        <input id="YtDlpPath" name="YtDlpPath" type="text" is="emby-input" />
+                        <div class="fieldDescription">Leave empty to use the managed binary. Set a path to use your own yt-dlp.</div>
+                    </div>
+                    <button is="emby-button" type="button" id="btnUpdateYtDlp" class="raised emby-button" style="margin-top: 0.5em;">
+                        <span>Update yt-dlp</span>
+                    </button>
                 </div>
 
                 <!-- Tabs -->
@@ -128,9 +139,6 @@
                             <h3>Actions</h3>
                             <button is="emby-button" type="button" id="btnSync" class="raised button-submit block emby-button">
                                 <span>Sync Now</span>
-                            </button>
-                            <button is="emby-button" type="button" id="btnUpdateYtDlp" class="raised block emby-button" style="margin-top: 0.5em;">
-                                <span>Update yt-dlp</span>
                             </button>
                         </div>
 
@@ -494,6 +502,7 @@
 
                 ApiClient.getPluginConfiguration(YtDlpConfig.pluginUniqueId).then(function(config) {
                     YtDlpConfig.config = config;
+                    document.querySelector('#YtDlpPath').value = config.YtDlpPath || '';
                     document.querySelector('#DownloadPath').value = config.DownloadPath || '';
                     document.querySelector('#ScheduleEnabled').checked = config.ScheduleEnabled;
                     document.querySelector('#ScheduleIntervalHours').value = config.ScheduleIntervalHours || 24;
@@ -520,6 +529,7 @@
                 e.preventDefault();
                 Dashboard.showLoadingMsg();
 
+                YtDlpConfig.config.YtDlpPath = document.querySelector('#YtDlpPath').value;
                 YtDlpConfig.config.DownloadPath = document.querySelector('#DownloadPath').value;
                 YtDlpConfig.config.ScheduleEnabled = document.querySelector('#ScheduleEnabled').checked;
                 YtDlpConfig.config.ScheduleIntervalHours = parseInt(document.querySelector('#ScheduleIntervalHours').value, 10);
