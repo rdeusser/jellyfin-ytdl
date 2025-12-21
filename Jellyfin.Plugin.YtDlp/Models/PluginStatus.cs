@@ -26,4 +26,9 @@ public class PluginStatus
     /// Gets or sets the last sync time.
     /// </summary>
     public DateTime? LastSyncTime { get; set; }
+
+    /// <summary>
+    /// Gets or sets the expected binary path (for debugging).
+    /// </summary>
+    public string? BinaryPath { get; set; }
 }

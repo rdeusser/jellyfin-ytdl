@@ -344,7 +344,7 @@
                             (status.LastSyncTime ? ' (Last sync: ' + new Date(status.LastSyncTime).toLocaleString() + ')' : '');
                     } else {
                         statusEl.className = 'ytdlp-status error';
-                        textEl.textContent = 'yt-dlp not available. Click "Update yt-dlp" to download.';
+                        textEl.textContent = 'yt-dlp not available. Expected at: ' + (status.BinaryPath || 'unknown');
                     }
                 }).catch(function() {
                     var statusEl = document.querySelector('#statusSection');

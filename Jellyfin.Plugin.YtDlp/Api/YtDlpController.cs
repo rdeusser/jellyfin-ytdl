@@ -41,19 +41,22 @@ public class YtDlpController : ControllerBase
     /// <summary>
     /// Gets the current plugin status.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The plugin status.</returns>
     [HttpGet("Status")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<PluginStatus>> GetStatus()
+    public async Task<ActionResult<PluginStatus>> GetStatus(CancellationToken cancellationToken)
     {
-        var version = await _binaryManager.GetVersionAsync().ConfigureAwait(false);
+        var version = await _binaryManager.GetVersionAsync(cancellationToken).ConfigureAwait(false);
+        var binaryPath = await _binaryManager.GetBinaryPathAsync(cancellationToken).ConfigureAwait(false);
 
         return Ok(new PluginStatus
         {
             YtDlpAvailable = _binaryManager.IsAvailable(),
             YtDlpVersion = version,
             IsSyncing = _syncService.IsSyncing,
-            LastSyncTime = _syncService.LastSyncTime
+            LastSyncTime = _syncService.LastSyncTime,
+            BinaryPath = binaryPath
         });
     }
 
