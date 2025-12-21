@@ -69,6 +69,18 @@ public class YtDlpBinaryManager : IYtDlpBinaryManager
     }
 
     /// <inheritdoc />
+    public string GetExpectedBinaryPath()
+    {
+        var config = Plugin.Instance?.Configuration;
+        if (config != null && !string.IsNullOrEmpty(config.YtDlpPath))
+        {
+            return config.YtDlpPath;
+        }
+
+        return _binaryPath;
+    }
+
+    /// <inheritdoc />
     public async Task<string?> GetVersionAsync(CancellationToken cancellationToken = default)
     {
         if (!IsAvailable())

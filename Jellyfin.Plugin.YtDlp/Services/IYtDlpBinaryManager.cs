@@ -22,6 +22,12 @@ public interface IYtDlpBinaryManager
     bool IsAvailable();
 
     /// <summary>
+    /// Gets the expected path to the yt-dlp binary without downloading.
+    /// </summary>
+    /// <returns>The expected binary path.</returns>
+    string GetExpectedBinaryPath();
+
+    /// <summary>
     /// Gets the installed yt-dlp version.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>

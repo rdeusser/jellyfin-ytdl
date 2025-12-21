@@ -48,7 +48,6 @@ public class YtDlpController : ControllerBase
     public async Task<ActionResult<PluginStatus>> GetStatus(CancellationToken cancellationToken)
     {
         var version = await _binaryManager.GetVersionAsync(cancellationToken).ConfigureAwait(false);
-        var binaryPath = await _binaryManager.GetBinaryPathAsync(cancellationToken).ConfigureAwait(false);
 
         return Ok(new PluginStatus
         {
@@ -56,7 +55,7 @@ public class YtDlpController : ControllerBase
             YtDlpVersion = version,
             IsSyncing = _syncService.IsSyncing,
             LastSyncTime = _syncService.LastSyncTime,
-            BinaryPath = binaryPath
+            BinaryPath = _binaryManager.GetExpectedBinaryPath()
         });
     }
 
