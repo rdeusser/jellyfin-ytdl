@@ -95,6 +95,7 @@ public class SyncService : IHostedService, IDisposable
             }
 
             var enabledSources = config.Sources.Where(s => s.Enabled).ToList();
+            _logger.LogInformation("Found {Count} enabled sources", enabledSources.Count);
 
             foreach (var source in enabledSources)
             {

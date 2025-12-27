@@ -202,7 +202,7 @@ public class YtDlpWrapper : IYtDlpWrapper
         };
     }
 
-    private static async Task<(int ExitCode, string Output, string Error)> RunProcessAsync(
+    private async Task<(int ExitCode, string Output, string Error)> RunProcessAsync(
         string fileName,
         IEnumerable<string> args,
         CancellationToken cancellationToken)
@@ -224,12 +224,14 @@ public class YtDlpWrapper : IYtDlpWrapper
 
         var outputBuilder = new StringBuilder();
         var errorBuilder = new StringBuilder();
+        var logPath = GetLogPath();
 
         process.OutputDataReceived += (_, e) =>
         {
             if (e.Data != null)
             {
                 outputBuilder.AppendLine(e.Data);
+                AppendToLog(logPath, e.Data);
             }
         };
 
@@ -238,6 +240,7 @@ public class YtDlpWrapper : IYtDlpWrapper
             if (e.Data != null)
             {
                 errorBuilder.AppendLine(e.Data);
+                AppendToLog(logPath, $"[stderr] {e.Data}");
             }
         };
 
@@ -248,5 +251,34 @@ public class YtDlpWrapper : IYtDlpWrapper
         await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
 
         return (process.ExitCode, outputBuilder.ToString(), errorBuilder.ToString());
+    }
+
+    private static string? GetLogPath()
+    {
+        var config = Plugin.Instance?.Configuration;
+        if (string.IsNullOrEmpty(config?.DownloadPath))
+        {
+            return null;
+        }
+
+        return Path.Combine(config.DownloadPath, "ytdlp.log");
+    }
+
+    private static void AppendToLog(string? logPath, string message)
+    {
+        if (string.IsNullOrEmpty(logPath))
+        {
+            return;
+        }
+
+        try
+        {
+            var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+            File.AppendAllText(logPath, $"[{timestamp}] {message}\n");
+        }
+        catch
+        {
+            // ignore logging failures
+        }
     }
 }

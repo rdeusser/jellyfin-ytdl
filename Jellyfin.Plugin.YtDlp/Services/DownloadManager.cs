@@ -120,6 +120,7 @@ public class DownloadManager : IDownloadManager
         }
 
         await AddToFailedQueueAsync(video, lastError ?? "Unknown error", cancellationToken).ConfigureAwait(false);
+        _logger.LogError("Failed to download {VideoId} after {MaxRetries} attempts: {Error}", video.Id, MaxRetries, lastError);
         return false;
     }
 

@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.YtDlp.Models;
@@ -204,5 +205,53 @@ public class YtDlpController : ControllerBase
         Plugin.Instance?.SaveConfiguration();
 
         return Ok();
+    }
+
+    /// <summary>
+    /// Gets recent log entries.
+    /// </summary>
+    /// <param name="lines">Number of lines to return.</param>
+    /// <returns>The log content.</returns>
+    [HttpGet("Logs")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public ActionResult GetLogs([FromQuery] int lines = 500)
+    {
+        var logPath = GetLogPath();
+        if (string.IsNullOrEmpty(logPath) || !System.IO.File.Exists(logPath))
+        {
+            return Ok(new { content = string.Empty });
+        }
+
+        var allLines = System.IO.File.ReadAllLines(logPath);
+        var content = string.Join("\n", allLines.TakeLast(lines));
+        return Ok(new { content });
+    }
+
+    /// <summary>
+    /// Clears the log file.
+    /// </summary>
+    /// <returns>Action result.</returns>
+    [HttpPost("Logs/Clear")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public ActionResult ClearLogs()
+    {
+        var logPath = GetLogPath();
+        if (!string.IsNullOrEmpty(logPath) && System.IO.File.Exists(logPath))
+        {
+            System.IO.File.WriteAllText(logPath, string.Empty);
+        }
+
+        return Ok();
+    }
+
+    private static string? GetLogPath()
+    {
+        var config = Plugin.Instance?.Configuration;
+        if (string.IsNullOrEmpty(config?.DownloadPath))
+        {
+            return null;
+        }
+
+        return System.IO.Path.Combine(config.DownloadPath, "ytdlp.log");
     }
 }
