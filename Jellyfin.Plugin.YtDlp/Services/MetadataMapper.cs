@@ -33,9 +33,16 @@ public class MetadataMapper : IMetadataMapper
             await using (writer.ConfigureAwait(false))
             {
                 await writer.WriteStartDocumentAsync().ConfigureAwait(false);
-                await writer.WriteStartElementAsync(null, "episodedetails", null).ConfigureAwait(false);
+                await writer.WriteStartElementAsync(null, "movie", null).ConfigureAwait(false);
 
                 await writer.WriteElementStringAsync(null, "title", null, video.Title).ConfigureAwait(false);
+
+                if (!string.IsNullOrEmpty(video.Channel))
+                {
+                    await writer.WriteStartElementAsync(null, "set", null).ConfigureAwait(false);
+                    await writer.WriteElementStringAsync(null, "name", null, video.Channel).ConfigureAwait(false);
+                    await writer.WriteEndElementAsync().ConfigureAwait(false);
+                }
 
                 if (!string.IsNullOrEmpty(video.Description))
                 {
@@ -44,8 +51,10 @@ public class MetadataMapper : IMetadataMapper
 
                 if (video.ParsedUploadDate.HasValue)
                 {
+                    var year = video.ParsedUploadDate.Value.Year.ToString(CultureInfo.InvariantCulture);
+                    await writer.WriteElementStringAsync(null, "year", null, year).ConfigureAwait(false);
                     var dateStr = video.ParsedUploadDate.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                    await writer.WriteElementStringAsync(null, "aired", null, dateStr).ConfigureAwait(false);
+                    await writer.WriteElementStringAsync(null, "premiered", null, dateStr).ConfigureAwait(false);
                 }
 
                 if (video.Duration.HasValue)
